@@ -22,6 +22,7 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
 
  uniform sampler2D inputImageTexture;
  uniform float edgeStrength;
+ uniform float power;
  
  void main()
  {
@@ -36,9 +37,10 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
     float h = -topLeftIntensity - 2.0 * topIntensity - topRightIntensity + bottomLeftIntensity + 2.0 * bottomIntensity + bottomRightIntensity;
     float v = -bottomLeftIntensity - 2.0 * leftIntensity - topLeftIntensity + bottomRightIntensity + 2.0 * rightIntensity + topRightIntensity;
     
-    float mag = length(vec2(h, v)) * edgeStrength;
     
-    gl_FragColor = vec4(vec3(mag), 1.0);
+    float mag = pow(h*h + v*v, power);
+    
+    gl_FragColor = vec4(vec3(mag) * edgeStrength, 1.0);
  }
 );
 #else
@@ -58,6 +60,7 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
  
  uniform sampler2D inputImageTexture;
  uniform float edgeStrength;
+ uniform float power;
 
  void main()
  {
@@ -72,14 +75,17 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
      float h = -topLeftIntensity - 2.0 * topIntensity - topRightIntensity + bottomLeftIntensity + 2.0 * bottomIntensity + bottomRightIntensity;
      float v = -bottomLeftIntensity - 2.0 * leftIntensity - topLeftIntensity + bottomRightIntensity + 2.0 * rightIntensity + topRightIntensity;
      
-     float mag = length(vec2(h, v)) * edgeStrength;
+     float mag = pow(h*h + v*v, power);
      
-     gl_FragColor = vec4(vec3(mag), 1.0);
+     gl_FragColor = vec4(vec3(mag) * edgeStrength, 1.0);
  }
 );
 #endif
 
 @implementation GPUImageSobelEdgeDetectionFilter
+{
+    float _power;
+}
 
 @synthesize texelWidth = _texelWidth; 
 @synthesize texelHeight = _texelHeight; 
@@ -112,8 +118,10 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
     texelWidthUniform = [secondFilterProgram uniformIndex:@"texelWidth"];
     texelHeightUniform = [secondFilterProgram uniformIndex:@"texelHeight"];
     edgeStrengthUniform = [secondFilterProgram uniformIndex:@"edgeStrength"];
+    powerUniform = [secondFilterProgram uniformIndex:@"power"];
     
     self.edgeStrength = 1.0;
+    self.isSquared = NO;
     return self;
 }
 
@@ -181,6 +189,17 @@ NSString *const kGPUImageSobelEdgeDetectionFragmentShaderString = SHADER_STRING
     _edgeStrength = newValue;
     
     [self setFloat:_edgeStrength forUniform:edgeStrengthUniform program:secondFilterProgram];
+}
+
+- (void)setIsSquared:(BOOL)isSquared
+{
+    if (isSquared) {
+        _power = 1;
+    }
+    else
+        _power = 0.5;
+    
+    [self setFloat:_power forUniform:powerUniform program:secondFilterProgram];
 }
 
 
