@@ -11,7 +11,7 @@ NSString *const kGPUImageLuminanceFragmentShaderString = SHADER_STRING
  
  uniform sampler2D inputImageTexture;
  
- const highp vec3 W = vec3(0.2125, 0.7154, 0.0721);
+ const highp vec3 W = vec3(0.299, 0.587, 0.114);
  
  void main()
  {
@@ -28,7 +28,7 @@ NSString *const kGPUImageLuminanceFragmentShaderString = SHADER_STRING
  
  uniform sampler2D inputImageTexture;
  
- const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+ const vec3 W = vec3(0.299, 0.587, 0.114);
  
  void main()
  {
